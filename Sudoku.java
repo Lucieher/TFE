@@ -37,6 +37,7 @@ public class Sudoku
 		}
 	}
 	
+	
 	public int SolveNew() {
 		GetRanking();
 		count++;
@@ -47,6 +48,11 @@ public class Sudoku
 		return SolveSudokuRecOld(puzzle);
 	}
 	
+	/*
+	 * Utilise l'algorithme de backtracking basique pour résoudre le sudoku
+	 * @pre : -
+	 * @post : met à jour this.puzzle
+	 */
 	public int SolveSudokuRecOld(int[] puzzle){
 		int i,j;
 		int[] findfirst = this.findfirstold();
@@ -66,6 +72,11 @@ public class Sudoku
 		return -1;
 	}
 	
+	/*
+	 * Utilise l'algorithme de backtracking amélioré pour résoudre le sudoku
+	 * @pre : -
+	 * @post : met à jour this.puzzle
+	 */
 	public int SolveSudokuRecNew(int[] puzzle){
 		int i,j;
 		//ICI
@@ -88,8 +99,11 @@ public class Sudoku
 	
 	
 	
-	//On classe les cases de celles ayant le moins de possibilités à celles en ayant le plus.
-	//On place ce classement dans une liste.
+	/*On classe les cases de celles ayant le moins de possibilités à celles en ayant le plus.
+	 *On place ce classement dans une liste.
+	 * @pre : -
+	 * @post : -
+	 */
 	public void GetRanking() {
 		int [] rank_temp = {0,0,0,0,0,0,0,0,0,
 				0,0,0,0,0,0,0,0,0,
@@ -134,10 +148,10 @@ public class Sudoku
 	
 	
 	/*
+	 * Cherche la prochaine case a analyser
 	 * @pre : number est le nombre de solution possible, compris entre 1 et 9
 	 * rank_temp est le tableau avec a la place des chiffres, les solutions possibles
 	 * @post : renvoit un int[2] avec int[0] = x et int[1] = y
-	 * 
 	 */
 	public int[] findFirstPossi(int number,int[] rank_temp) {
 		int[] retour = {-1,-1};
@@ -152,6 +166,10 @@ public class Sudoku
 		return retour;
 	}
 	
+	/* Dit le nombre de possibilité au cooordonné donné en parametre
+	 * @pre : x et y sont les coordonnées de la case a verifier
+	 * @post : renvoit le nombre de possibilité 
+	 */
 	public int NumberOfPossibilities(int x, int y) {
 		int number = 0;
 		for(int i=1;i<=9;i++) {
@@ -352,9 +370,6 @@ public class Sudoku
         return -1;
     }
  
-    /*
-     * 
-     */
     public void print() {
     	System.out.print(this.puzzle[0]+"  "+this.puzzle[1]+"  "+this.puzzle[2]+"    "+this.puzzle[3]+"  "+this.puzzle[4]+"  "+this.puzzle[5]+"    "+this.puzzle[6]+"  "+this.puzzle[7]+"  "+this.puzzle[8]+"\n");
    	 System.out.print(this.puzzle[9]+"  "+this.puzzle[10]+"  "+this.puzzle[11]+"    "+this.puzzle[12]+"  "+this.puzzle[13]+"  "+this.puzzle[14]+"    "+this.puzzle[15]+"  "+this.puzzle[16]+"  "+this.puzzle[17]+"\n");
