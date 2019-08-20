@@ -5,15 +5,12 @@ import lejos.hardware.lcd.Font;
 import lejos.hardware.lcd.GraphicsLCD;
 import lejos.utility.Delay;
 import lejos.hardware.Button;
-//import lejos.hardware.KeyListener;
-//import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.port.*;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.robotics.SampleProvider;
 import lejos.hardware.Sound;
 import lejos.hardware.motor.*;
 import lejos.robotics.RegulatedMotor;
-//import lejos.hardware.sensor.SensorMode;
 
 public class firstapp {
 	// Definition des constantes
@@ -28,7 +25,7 @@ public class firstapp {
 	static final int CELL_WIDTH_Scan = 112;// 112;//128; //126
 	static final int CELL_WIDTH_DECAL = 400;
 
-	// Correction des angles du moteur Y pour le Scan
+	// Angles du moteur Y pour le Scan
 	static final int SCAN_CELL_Y_C1 = -463;
 	static final int SCAN_CELL_Y_C2 = -342;
 	static final int SCAN_CELL_Y_C3 = -225;
@@ -39,7 +36,7 @@ public class firstapp {
 	static final int SCAN_CELL_Y_C8 = 342;
 	static final int SCAN_CELL_Y_C9 = 463;
 
-	// Correction des angles du moteur X pour le Scan
+	// Angles du moteur X pour le Scan
 	static final int SCAN_CELL_X_C1 = -500;
 	static final int SCAN_CELL_X_C2 = -275;
 	static final int SCAN_CELL_X_C3 = -120;
@@ -50,19 +47,18 @@ public class firstapp {
 	static final int SCAN_CELL_X_C8 = -275;
 	static final int SCAN_CELL_X_C9 = -500;
 
-	// Correction des angles du moteur Y pour le bic
-	// 38=0.6
-	static final int BIC_CELL_Y_C1 = -355;// 362
-	static final int BIC_CELL_Y_C2 = -274;// 274
-	static final int BIC_CELL_Y_C3 = -190;// 188
-	static final int BIC_CELL_Y_C4 = -105;// 103
-	static final int BIC_CELL_Y_C5 = -25;// 19
-	static final int BIC_CELL_Y_C6 = 50;// 61
-	static final int BIC_CELL_Y_C7 = 140;// 145
-	static final int BIC_CELL_Y_C8 = 222;// 230
-	static final int BIC_CELL_Y_C9 = 305;// 317
+	// Angles du moteur Y pour le bic
+	static final int BIC_CELL_Y_C1 = -355;
+	static final int BIC_CELL_Y_C2 = -274;
+	static final int BIC_CELL_Y_C3 = -190;
+	static final int BIC_CELL_Y_C4 = -105;
+	static final int BIC_CELL_Y_C5 = -25;
+	static final int BIC_CELL_Y_C6 = 50;
+	static final int BIC_CELL_Y_C7 = 140;
+	static final int BIC_CELL_Y_C8 = 222;
+	static final int BIC_CELL_Y_C9 = 305;
 
-	// Correction des angles du moteur X pour le bic
+	// Angles du moteur X pour le bic
 	static final int BIC_CELL_X_C1 = -411;
 	static final int BIC_CELL_X_C2 = -236;
 	static final int BIC_CELL_X_C3 = -111;
@@ -82,7 +78,7 @@ public class firstapp {
 	static final int E = 7;
 	static final int NE = 8;
 
-	// largeur et hauteur d'un trai du bic
+	// largeur et hauteur d'un trait du bic
 	static final int LINE_Y = 44;
 	static final int LINE_X = 135;
 
@@ -99,16 +95,13 @@ public class firstapp {
 	static GraphicsLCD g;
 	static RegulatedMotor motorBicDown;
 	static RegulatedMotor motorY;
-
-	//positif : vers la droite quand on regarde au dessus du robot
 	static RegulatedMotor motorX;
 	static EV3ColorSensor sensor;
 	static EV3ColorSensor colorSensor;
 	static SampleProvider colorProvider;
-	//static float[] colorSample;
 	private static int sampleSize;
 
-	//Definition des variables globale
+	//Definition des variables globales
 	static boolean isBicDown = false;
 	static int positionY = 0;
 	static float[] bufferCase;
@@ -134,18 +127,21 @@ public class firstapp {
 
 		Sound.beepSequenceUp();
 		Sound.beepSequenceUp();
-		Button.waitForAnyPress();//DEPART
+		Button.waitForAnyPress();
 		
+		// Verification du statut des cases
 		CheckEmpty(); //BufferScan a été maj
 		Sound.beepSequenceUp();
 		Sound.beepSequenceUp();
 		Button.waitForAnyPress();
 		
+		// Scan détaillé des cases remplie
 		Scan();
 		Sound.beepSequenceUp();
 		Sound.beepSequenceUp();
 		Button.waitForAnyPress();
 		
+		//Resolution du sudoku et écriture des réponses
 		ResolveAndWrite(bufferScan);
 		Sound.beepSequenceUp();
 		Sound.beepSequence();
@@ -166,35 +162,18 @@ public class firstapp {
 	 */
 	public static void ResolveAndWrite(int[] sudoku) {
 		int[] sudokuUnresolved = makeCopy(sudoku);
+		// On garde un exemplaire du sudoku non résolut pour savoir où on doit ecrire les réponses
 		Sudoku puzzle = new Sudoku(sudoku);
-		puzzle.SolveNew();
+		puzzle.SolveNew(); // resolution
 		int posi = 0;
 		motorX.resetTachoCount();
 		MoveToColumnBic(1);
 		motorX.rotate(80);
 		for (int i = 0; i < 81; i++) {
 			if (sudokuUnresolved[i / 9 + (i % 9) * 9] != puzzle.puzzle[i / 9 + (i % 9) * 9]) {
-				MoveToWrite(posi, i);
-				WriteNumber(puzzle.puzzle[i / 9 + (i % 9) * 9]);
-				posi = i;
-			}
-		}
-		moveXY(-motorX.getTachoCount(), -motorY.getTachoCount());
-	}
-
-	public static void ResolveAndWriteOneCol(int[] sudoku, int col) {
-		int[] sudokuUnresolved = makeCopy(sudoku);
-		Sudoku puzzle = new Sudoku(sudoku);
-		puzzle.SolveNew();
-		int posi = 0;
-		motorX.resetTachoCount();
-		// MoveToColumnBic(1);
-
-		for (int i = 0; i < 81; i++) {
-			if (sudokuUnresolved[i / 9 + (i % 9) * 9] != puzzle.puzzle[i / 9 + (i % 9) * 9] && (i / 9) == (col - 1)) {
-				MoveToWrite(posi, i);
-				WriteNumber(puzzle.puzzle[i / 9 + (i % 9) * 9]);
-				posi = i;
+				MoveToWrite(posi, i); // le robot se place dans la prochaine case à remplir
+				WriteNumber(puzzle.puzzle[i / 9 + (i % 9) * 9]); // et écrit le chiffre
+				posi = i; // posi garde la position actuelle du bic en mémoire
 			}
 		}
 		moveXY(-motorX.getTachoCount(), -motorY.getTachoCount());
@@ -216,7 +195,7 @@ public class firstapp {
 		}
 		motorX.resetTachoCount();
 		motorY.resetTachoCount();
-		// commencer a la case du milieu tout en haut
+		// commencer à la case du milieu tout en haut
 
 		for (int i = 1; i <= 9; i++) {
 			MoveToColumnScan(i); // Etape 1 : On se positionne au début de la colonne
@@ -244,7 +223,7 @@ public class firstapp {
 	/*
 	 * Analyse si les cases d'une colonne contiennent un chiffre ou non
 	 * 
-	 * @pre : column contient le numéro de colonne a analyser (compris entre 1 et 9)
+	 * @pre : column contient le numéro de colonne à analyser (compris entre 1 et 9)
 	 * valMid est un buffer de taille 81 contenant les moyennes déja calculées des
 	 * cases des colonnes précédentes
 	 * 
@@ -308,19 +287,9 @@ public class firstapp {
 				}
 			}
 			// fin de la case
-			/**
-			 * System.out.println(column-1+" , "+i+" : "+valTemp[0]+" "+valTemp[1]+"
-			 * "+valTemp[2]+" "+valTemp[3]+" "+valTemp[4]+" "+valTemp[5]+" "+valTemp[6]+"
-			 * "+valTemp[7]+" "+valTemp[8]);
-			 **/
 			valMid[(column - 1) * 9 + i] = moyFromTab(valTemp);
 			// On enregistre la moyenne des valeurs qui ont été observées
 		}
-		/**
-		 * int c = column-1; System.out.println("colonne "+c+" : "+valMid[c*9]+"
-		 * "+valMid[c*9+1]+" "+valMid[c*9+2]+" "+valMid[c*9+3]+" "+valMid[c*9+4]+"
-		 * "+valMid[c*9+5]+" "+valMid[c*9+6]+" "+valMid[c*9+7]+" "+valMid[c*9+8]+" ");
-		 **/
 		motorX.setSpeed(400);
 		return valMid;
 	}
@@ -328,7 +297,7 @@ public class firstapp {
 	/*
 	 * Deplace le robot de manière à pouvoir scanner la colonne donnée en paramètre
 	 * 
-	 * @pre : col est lenuméro de la colonne a scanner (compris entre 1 et 9)
+	 * @pre : col est le numéro de la colonne a scanner (compris entre 1 et 9)
 	 * 
 	 * @post : -
 	 */
@@ -352,7 +321,7 @@ public class firstapp {
 	}
 
 	/*
-	 * Deplace le robot de manière à pouvoir ecrire dans la colonne donnée en
+	 * Déplace le robot de manière à pouvoir ecrire dans la colonne donnée en
 	 * paramètre
 	 * 
 	 * @pre : col est le numéro de la colonne où l'on veux écrire (compris entre 1
@@ -382,7 +351,7 @@ public class firstapp {
 	}
 
 	/*
-	 * Deplace le robot pour ecrire dans la case suivante. Si changement de colonne,
+	 * Déplace le robot pour ecrire dans la case suivante. Si changement de colonne,
 	 * il y a d'abord calibration par rapport à la position initiale puis
 	 * déplacement dans la bonne colonne
 	 * 
@@ -396,8 +365,6 @@ public class firstapp {
 			MoveToColumnBic((next / 9) + 1);
 			Sound.beepSequenceUp();
 			motorX.rotate((next % 9) * CELL_HEIGHT_Bic + 60);
-			// 80 = 2mm
-			// 120 = 3mm
 		} else {
 			if (next % 9 != previous % 9) {
 				motorX.rotate(((next % 9) - (previous % 9)) * CELL_HEIGHT_Bic);
@@ -431,6 +398,14 @@ public class firstapp {
 		}
 	}
 
+	
+	/*
+	 * Fonction qui descend ou remonte le bic
+	 * 
+	 * @pre : -
+	 * @post : si le bic était en position remonté, il a été abaissé. 
+	 * Si il était en position abaissé, il est remonté après la fonction
+	 */
 	public static void MovePen() {
 		int rotation = 40;
 		if (isBicDown) {
@@ -443,6 +418,22 @@ public class firstapp {
 
 	}
 
+	/*
+	 * Fonction qui écrit la series de traits donné dans ses paramètres
+	 * 
+	 * @pre : dir[] et size[] contiennent autant d'elements que le nombre de traits à tracer 
+	 * 		  dir[] contient les directions des traits que la fonction devra écrire.
+	 * 		  size[] donne les longueurs des traits que la fonction devra écrire.
+	 * 
+	 * dir = 1 UP
+	 * dir = 2 DOWN
+	 * dir = 3 LEFT
+	 * dir = 4 RIGHT
+	 * size = 1 SHORT
+	 * size = 2 = LONG
+	 *
+	 * @post : la série de traits décrit dans les paramètres a été écrite
+	 * */
 	public static void WriteDir(int[] dir, int[] size) {
 		// dir = 1 UP
 		// dir = 2 DOWN
@@ -455,8 +446,6 @@ public class firstapp {
 		int countX = motorX.getTachoCount();
 		int countY = motorY.getTachoCount();
 		MovePen();
-		// motorY.resetTachoCount();
-		// motorX.resetTachoCount();
 		for (int i = 0; i < dir.length; i++) {
 			if (dir[i] == 1) {
 				X = -LINE_X;
@@ -482,16 +471,8 @@ public class firstapp {
 				X = 2 * X;
 				Y = 2 * Y;
 			}
-			// 135 = 5*3*3*3 - 108
-			// 36 = 3*2*2*3 - 29
-			// 4mm en moteur X : 160
-
-			// 4mm en moteur Y : 25
 			System.out.println("X : " + X + ", Y : " + Y);
 			moveXY(X, Y);
-
-			// countX=countX+X;
-			// countY=countY+Y;
 		}
 		MovePen();
 		motorX.rotate(-motorX.getTachoCount() + countX);
@@ -499,6 +480,12 @@ public class firstapp {
 
 	}
 
+	/*
+	 * Ecrit le chiffre donné en paramètre 
+	 * 
+	 * @pre : number contient le chiffre à écrire
+	 * @post : number à été écrit sur la feuille
+	 */
 	public static void WriteNumber(int number) {
 		if (number == 1) {
 			System.out.println("Chiffre : " + 1);
@@ -632,14 +619,19 @@ public class firstapp {
 	 * @post : renvoi un tableau de float contenant sampleSize échantillons
 	 */
 	private static float[] getSample() {
-		// Initializes the array for holding samples
+		// Initialise le tableau qui contiendra les echantillons
 		float[] sample = new float[sampleSize];
 
-		// Gets the sample an returns it
+		// Récupère l'echantillon
 		colorProvider.fetchSample(sample, 0);
 		return sample;
 	}
 
+	/*
+	 * Imprime binarybuffer
+	 * @pre : -
+	 * @post : -
+	 */
 	public static void LCDprintCaseBinary() {
 		g.clear();
 		// g.drawRect(22, 43, 98, 77);
@@ -655,6 +647,13 @@ public class firstapp {
 		}
 	}
 
+	/*
+	 * Scan les cases qui ont été déterminée comme contenant un chiffre
+	 * 
+	 * @pre : CheckEmpty a été lancé et le bufferScan contient les valeurs a scanner
+	 * 
+	 * @post : le scan des cases remplie a été fait et le bufferScan a été mis à jour
+	 */
 	public static void Scan() {
 		for (int i = 0; i < 9; i++) {
 			MoveToColumnScan(i + 1);
@@ -668,6 +667,13 @@ public class firstapp {
 		}
 	}
 
+	/*
+	 * Scan une cellule
+	 * 
+	 * @pre : -
+	 * 
+	 * @post : a scanné la prochaine case a scanner et met à jour le BufferScan
+	 */
 	public static int ScanCell() {
 		g.refresh();
 		g.clear();
@@ -709,8 +715,6 @@ public class firstapp {
 					}
 				}
 			}
-
-			// motorY.rotate(-motorY.getTachoCount());
 			motorY.setSpeed(250);
 			motorY.rotate(-(motorY.getTachoCount() - tacoY));
 			motorX.rotate(-CELL_HEIGHT_Scan / SIZE_CASE_ROW);
@@ -779,6 +783,12 @@ public class firstapp {
 		return number;
 	}
 
+	
+	/*
+	 * Binarise les valeurs de la case
+	 * @pre : BufferCase contient les valeurs non binarisé
+	 * @post : Les valeurs binarisé sont dans le BinaryBuffer
+	 */
 	public static void thresholdCase() {
 		int threshold = 0;
 		int nW = 1000; // Nombre de pixels blancs
@@ -879,11 +889,7 @@ public class firstapp {
 		int noir = 1;
 		int blanc = 0;
 		int mid = 0;
-		// if((SIZE_CASE_ROW % 2) == 0){
 		mid = (SIZE_CASE_ROW * SIZE_CASE_COLUMN) / 2;
-		// }
-		// else {
-		// mid = (SIZE_CASE_ROW * SIZE_CASE_COLUMN) / 2 + SIZE_CASE_COLUMN/2 ;
 		int base = mid;
 
 		// Etape 1 : trouver le pixel noir le plus proche du centre
@@ -945,7 +951,6 @@ public class firstapp {
 		// -1
 
 		// Etape 3 : effacer tout les pixels qui ne sont pas dans le buffer chiffre
-		// les pixels du chiffre ont tous
 		for (int i = 0; i < SIZE_CASE_ROW * SIZE_CASE_COLUMN; i++) {
 			if (binarybuffer[i] == -noir) {
 				binarybuffer[i] = noir;
@@ -960,6 +965,7 @@ public class firstapp {
 	 * 
 	 * pre : bufferCase, contient le buffer de la case a imprimmer post : renvoi le
 	 * buffer updater après affinement
+	 * @post : -
 	 */
 	private static void thinningCase() {
 		int noir = 1;
@@ -1074,12 +1080,6 @@ public class firstapp {
 						}
 						np += Math.abs(surround[m]);
 					}
-					// if (np >= 2 && np <= 6 && sp == 1 && (surround[0] * surround[2] *
-					// surround[4]) == 0
-					// && (surround[0] * surround[2] * surround[6]) == 0 && surround[7] != 0) {
-					// if (np >= 2 && np <= 6 && sp == 1 && (surround[2] * surround[4] *
-					// surround[6]) == 0 //VL
-					// && (surround[0] * surround[2] * surround[6]) == 0 && surround[7] != 0) {
 					if (np >= 2 && np <= 6 && sp == 1 && (surround[0] * surround[2] * surround[4]) == 0
 							&& (surround[2] * surround[4] * surround[6]) == 0) {
 						binarybuffer[i] = -noir;
@@ -1123,12 +1123,6 @@ public class firstapp {
 						}
 						np += Math.abs(surround[m]);
 					}
-					// if (np >= 2 && np <= 6 && sp == 1 && (surround[4] * surround[2] *
-					// surround[6]) == 0
-					// && (surround[0] * surround[4] * surround[6]) == 0 && surround[3] != 0) {
-					// if (np >= 2 && np <= 6 && sp == 1 && (surround[0] * surround[2] *
-					// surround[6]) == 0
-					// && (surround[0] * surround[4] * surround[6]) == 0 && surround[7] != 0) {
 					if (np >= 2 && np <= 6 && sp == 1 && (surround[0] * surround[2] * surround[6]) == 0
 							&& (surround[0] * surround[4] * surround[6]) == 0) {
 						binarybuffer[i] = -noir;
@@ -1195,6 +1189,13 @@ public class firstapp {
 		}
 	}
 
+	/*
+	 * Reconnait le chiffre dans le binaryBuffer
+	 * 
+	 * @pre : le binary buffer contient un chiffre binarisé, segmenté et affiner
+	 * 
+	 * @post : Renvoi le chiffre qui a été reconnu
+	 */
 	private static int RecognizeNumber() {
 		int top = SIZE_CASE_ROW - 1;
 		int bot = 0;
@@ -1286,6 +1287,13 @@ public class firstapp {
 		return number;
 	}
 
+	/*
+	 * Examine le segment visible au point i
+	 * @pre : i contient la position du debut du segment
+	 * @post : renvoit un int[2] avec 
+	 * int[0] = renvoi la longueur du segment
+	 * int[1] = renvoi la direction du segment
+	 */
 	public static int[] segment(int i) {
 		int[] v = new int[2];
 
@@ -1335,6 +1343,12 @@ public class firstapp {
 		return v;
 	}
 
+	/*
+	 * Trouve la longueur du segment
+	 * 
+	 * @pre : i donne la position du segment a analyser
+	 * @post : renvoi la longueur détecté du segment
+	 * */
 	public static int segmentLenght(int i) {
 
 		int length = 1;
